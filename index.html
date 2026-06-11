@@ -1,316 +1,326 @@
-{\rtf1\ansi\ansicpg1251\cocoartf2822
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww15880\viewh12080\viewkind0
-\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
-
-\f0\fs24 \cf0 <!DOCTYPE html>\
-<html>\
-<head>\
-    <meta charset="UTF-8">\
-    <title>\uc0\u1050 \u1072 \u1088 \u1090 \u1072  \u1087 \u1088 \u1086 \u1075 \u1091 \u1083 \u1086 \u1082  \u1057 \u1055 \u1073 </title>\
-    \
-    <!-- Leaflet CSS -->\
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />\
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />\
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />\
-    \
-    <style>\
-        body \{ margin: 0; font-family: Arial, sans-serif; \}\
-        #map \{ height: 100vh; width: 100%; \}\
-        \
-        .info-window \{ \
-            max-width: 320px; \
-            padding: 10px; \
-            text-align: center; \
-            background: white;\
-            border-radius: 8px;\
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);\
-        \}\
-        \
-        .video-thumb \{\
-            width: 100%;\
-            height: auto;\
-            display: block;\
-            border-radius: 4px;\
-            margin-bottom: 8px;\
-            background-color: #f0f0f0;\
-        \}\
-        \
-        .video-fallback \{\
-            width: 100%;\
-            height: 160px;\
-            border-radius: 8px;\
-            margin-bottom: 10px;\
-            display: flex;\
-            align-items: center;\
-            justify-content: center;\
-            font-family: Arial, sans-serif;\
-            color: white;\
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);\
-        \}\
-\
-        .info-window h3 \{ \
-            margin: 0 0 8px 0; \
-            font-size: 16px; \
-            line-height: 1.2; \
-        \}\
-        .info-window .date \{ \
-            color: #666; \
-            font-size: 13px; \
-            margin-bottom: 12px; \
-        \}\
-        \
-        .btn-group \{ \
-            display: flex; \
-            gap: 5px; \
-            justify-content: center; \
-            flex-wrap: wrap; \
-        \}\
-        .btn \{\
-            flex: 1; \
-            padding: 8px 5px; \
-            text-decoration: none; \
-            border-radius: 4px;\
-            font-weight: bold; \
-            font-size: 12px; \
-            min-width: 80px; \
-            border: 1px solid #ddd;\
-            transition: all 0.2s ease;\
-        \}\
-        .btn:hover \{\
-            transform: translateY(-1px);\
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);\
-        \}\
-        \
-        /* VK \uc0\u1075 \u1083 \u1072 \u1074 \u1085 \u1072 \u1103  \u1082 \u1085 \u1086 \u1087 \u1082 \u1072  */\
-        .btn-vk \{ \
-            background: #0077FF; \
-            color: white; \
-            border-color: #0077FF; \
-        \}\
-        .btn-youtube \{ color: #ff0000; border-color: #ff0000; \}\
-        .btn-rutube \{ color: #007bff; border-color: #007bff; \}\
-        \
-        #filters \{\
-            position: absolute; \
-            top: 10px; \
-            left: 10px; \
-            z-index: 1000;\
-            background: white; \
-            padding: 15px; \
-            border-radius: 8px;\
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2); \
-            max-width: 300px;\
-        \}\
-        #filters input \{ \
-            width: 100%; \
-            margin: 5px 0; \
-            padding: 8px; \
-            box-sizing: border-box; \
-        \}\
-    </style>\
-</head>\
-<body>\
-    <div id="filters">\
-        <h3 style="margin-top: 0;">\uc0\u55357 \u56589  \u1060 \u1080 \u1083 \u1100 \u1090 \u1088 \u1099 </h3>\
-        <input type="text" id="streetFilter" placeholder="\uc0\u1059 \u1083 \u1080 \u1094 \u1072  (\u1085 \u1072 \u1087 \u1088 \u1080 \u1084 \u1077 \u1088 : \u1057 \u1072 \u1076 \u1086 \u1074 \u1072 \u1103 )">\
-        <div id="countInfo">\uc0\u1047 \u1072 \u1075 \u1088 \u1091 \u1078 \u1077 \u1085 \u1086 : 0 \u1087 \u1088 \u1086 \u1075 \u1091 \u1083 \u1086 \u1082 </div>\
-    </div>\
-    \
-    <div id="map"></div>\
-\
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>\
-    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>\
-\
-    <script>\
-        const map = L.map('map').setView([59.933, 30.316], 14);\
-        L.tileLayer('https://\{s\}.tile.openstreetmap.org/\{z\}/\{x\}/\{y\}.png', \{\
-            attribution: '\'a9 OpenStreetMap contributors'\
-        \}).addTo(map);\
-\
-        const walks = [\
-            // \uc0\u1055 \u1088 \u1086 \u1075 \u1091 \u1083 \u1082 \u1072  1\
-            \{\
-                id: 1,\
-                title: "\uc0\u1046 \u1072 \u1088 \u1082 \u1080 \u1081  \u1083 \u1077 \u1090 \u1085 \u1080 \u1081  \u1076 \u1077 \u1085 \u1100  \u1085 \u1072  \u1057 \u1072 \u1076 \u1086 \u1074 \u1086 \u1081  \u1080  \u1091  \u1048 \u1089 \u1072 \u1072 \u1082 \u1080 \u1103  \u9728 \u65039  4K",\
-                youtube_id: "RrEMovv0YcY",\
-                rutube_id: "97506cb308931ebe92fbc5e22b5dde5b",\
-                vk_id: "-235889322_456239017",\
-                date: "05.06.2026",\
-                street: "\uc0\u1057 \u1072 \u1076 \u1086 \u1074 \u1072 \u1103  / \u1043 \u1086 \u1088 \u1086 \u1093 \u1086 \u1074 \u1072 \u1103 ",\
-                city: "\uc0\u1057 \u1072 \u1085 \u1082 \u1090 -\u1055 \u1077 \u1090 \u1077 \u1088 \u1073 \u1091 \u1088 \u1075 ",\
-                popup_direction: "right", // \uc0\u8592  \u1055 \u1086 \u1087 \u1072 \u1087  \u1086 \u1090 \u1082 \u1088 \u1099 \u1074 \u1072 \u1077 \u1090 \u1089 \u1103  \u1057 \u1055 \u1056 \u1040 \u1042 \u1040 \
-                \
-                route: [\
-                    [59.9284701, 30.3219784],\
-                    [59.92770086639246, 30.319864379726575],\
-                    [59.92971883966826, 30.31691065474633],\
-                    [59.92861162407293, 30.31567322206648],\
-                    [59.929763127523444, 30.314385281930303],\
-                    [59.92923799629868, 30.31231447622048],\
-                    [59.9328812892643, 30.30833479226941]\
-                ]\
-            \},\
-            // \uc0\u1055 \u1088 \u1086 \u1075 \u1091 \u1083 \u1082 \u1072  2\
-            \{\
-                id: 2,\
-                title: "\uc0\u1055 \u1088 \u1086 \u1075 \u1091 \u1083 \u1082 \u1072  \u1086 \u1090  \u1044 \u1074 \u1086 \u1088 \u1094 \u1086 \u1074 \u1086 \u1081  \u1087 \u1086  \u1043 \u1086 \u1088 \u1086 \u1093 \u1086 \u1074 \u1086 \u1081  \u1076 \u1086  \u1057 \u1072 \u1076 \u1086 \u1074 \u1086 \u1081 ",\
-                youtube_id: "JDKV4ZVDOFg",\
-                rutube_id: "89509f24cb70c72fe87aa5e7733fed25",\
-                vk_id: "", \
-                date: "05.05.2026",\
-                street: "\uc0\u1043 \u1086 \u1088 \u1086 \u1093 \u1086 \u1074 \u1072 \u1103  / \u1044 \u1074 \u1086 \u1088 \u1094 \u1086 \u1074 \u1072 \u1103  \u1087 \u1083 .",\
-                city: "\uc0\u1057 \u1072 \u1085 \u1082 \u1090 -\u1055 \u1077 \u1090 \u1077 \u1088 \u1073 \u1091 \u1088 \u1075 ",\
-                popup_direction: "left", // \uc0\u8592  \u1055 \u1086 \u1087 \u1072 \u1087  \u1086 \u1090 \u1082 \u1088 \u1099 \u1074 \u1072 \u1077 \u1090 \u1089 \u1103  \u1057 \u1051 \u1045 \u1042 \u1040 \
-                \
-                route: [\
-                    [59.93902365644025, 30.31100749396413],\
-                    [59.937412404964086, 30.312117279663422],\
-                    [59.936460693340194, 30.310255096879867],\
-                    [59.928641827688374, 30.321876191845234]\
-                ]\
-            \}\
-        ];\
-\
-        let allMarkers = [];\
-        let allPolylines = [];\
-        let markerClusterGroup;\
-        let activePopup = null;\
-\
-        function createPopupContent(walk) \{\
-            const date = walk.date;\
-            \
-            let buttonsHtml = `<div class="btn-group">`;\
-            \
-            if (walk.vk_id && walk.vk_id !== "") \{\
-                buttonsHtml += `<a href="https://vkvideo.ru/video$\{walk.vk_id\}" target="_blank" class="btn btn-vk">\uc0\u9654  VK \u1042 \u1080 \u1076 \u1077 \u1086 </a>`;\
-            \}\
-            if (walk.youtube_id && walk.youtube_id !== "") \{\
-                buttonsHtml += `<a href="https://www.youtube.com/watch?v=$\{walk.youtube_id\}" target="_blank" class="btn btn-youtube">\uc0\u9654  YouTube</a>`;\
-            \}\
-            if (walk.rutube_id && walk.rutube_id !== "") \{\
-                buttonsHtml += `<a href="https://rutube.ru/video/$\{walk.rutube_id\}/" target="_blank" class="btn btn-rutube">\uc0\u9654  RuTube</a>`;\
-            \}\
-            buttonsHtml += `</div>`;\
-\
-            let imageHtml = '';\
-            if (walk.youtube_id && walk.youtube_id !== "") \{\
-                imageHtml = `<img src="https://img.youtube.com/vi/$\{walk.youtube_id\}/hqdefault.jpg" \
-                                  class="video-thumb" \
-                                  alt="$\{walk.title\}"\
-                                  onerror="this.style.display='none'; document.getElementById('fallback-img-$\{walk.id\}').style.display='flex';">`;\
-            \}\
-            \
-            const fallbackColor = (walk.vk_id && walk.vk_id !== "") ? '#0077FF' : (walk.youtube_id ? '#ff0000' : '#888');\
-            const platformName = (walk.vk_id && walk.vk_id !== "") ? 'VK \uc0\u1042 \u1080 \u1076 \u1077 \u1086 ' : (walk.youtube_id ? 'YouTube' : '\u1042 \u1080 \u1076 \u1077 \u1086 ');\
-            \
-            imageHtml += `\
-                <div id="fallback-img-$\{walk.id\}" class="video-fallback" style="$\{walk.youtube_id ? 'display:none;' : 'display:flex;'\} background-color: $\{fallbackColor\};">\
-                    <div style="text-align:center;">\
-                        <div style="font-size: 40px; margin-bottom: 5px;">\uc0\u9654 </div>\
-                        <div style="font-weight: bold; font-size: 16px;">$\{platformName\}</div>\
-                    </div>\
-                </div>\
-            `;\
-\
-            return `\
-                <div class="info-window">\
-                    $\{imageHtml\}\
-                    <h3>$\{walk.title\}</h3>\
-                    <div class="date">\uc0\u55357 \u56517  $\{date\}</div>\
-                    $\{buttonsHtml\}\
-                </div>\
-            `;\
-        \}\
-\
-        function hideAllLines() \{\
-            allPolylines.forEach(p => p.setStyle(\{ opacity: 0 \}));\
-        \}\
-\
-        function renderMarkers(data) \{\
-            if (markerClusterGroup) map.removeLayer(markerClusterGroup);\
-            allPolylines.forEach(poly => map.removeLayer(poly));\
-            \
-            allMarkers = [];\
-            allPolylines = [];\
-\
-            data.forEach(walk => \{\
-                const polyline = L.polyline(walk.route, \{\
-                    color: '#FF5252',\
-                    weight: 4,             \
-                    opacity: 0,            \
-                    dashArray: '10, 10',   \
-                    lineCap: 'round'\
-                \}).addTo(map);\
-\
-                allPolylines.push(polyline);\
-\
-                const marker = L.marker(walk.route[0]);\
-                \
-                // \uc0\u1057 \u1086 \u1079 \u1076 \u1072 \u1105 \u1084  \u1087 \u1086 \u1087 \u1072 \u1087  \u1089  \u1085 \u1072 \u1087 \u1088 \u1072 \u1074 \u1083 \u1077 \u1085 \u1080 \u1077 \u1084  \u1080 \u1079  \u1076 \u1072 \u1085 \u1085 \u1099 \u1093 \
-                const popup = L.popup(\{ \
-                    autoClose: false, \
-                    closeOnClick: false,\
-                    direction: walk.popup_direction || 'auto' // \uc0\u8592  \u1048 \u1089 \u1087 \u1086 \u1083 \u1100 \u1079 \u1091 \u1077 \u1084  \u1085 \u1072 \u1087 \u1088 \u1072 \u1074 \u1083 \u1077 \u1085 \u1080 \u1077  \u1080 \u1079  \u1076 \u1072 \u1085 \u1085 \u1099 \u1093 \
-                \}).setContent(createPopupContent(walk));\
-                \
-                marker.bindPopup(popup);\
-\
-                marker.on('mouseover', function() \{\
-                    hideAllLines();\
-                    polyline.setStyle(\{ opacity: 1.0 \});\
-                    polyline.bringToFront();\
-                    this.openPopup();\
-                    activePopup = popup;\
-                \});\
-\
-                marker.on('mouseout', function() \{\
-                    setTimeout(() => \{\
-                        const isMouseOverPopup = document.querySelector('.leaflet-popup-pane:hover');\
-                        if (!isMouseOverPopup) \{\
-                            hideAllLines();\
-                            this.closePopup();\
-                            activePopup = null;\
-                        \}\
-                    \}, 100);\
-                \});\
-\
-                marker.on('popupopen', function() \{\
-                    const popupPane = document.querySelector('.leaflet-popup-content-wrapper');\
-                    if (popupPane) \{\
-                        popupPane.addEventListener('mouseleave', function() \{\
-                            hideAllLines();\
-                            marker.closePopup();\
-                            activePopup = null;\
-                        \});\
-                    \}\
-                \});\
-\
-                allMarkers.push(marker);\
-            \});\
-\
-            markerClusterGroup = L.markerClusterGroup();\
-            allMarkers.forEach(m => markerClusterGroup.addLayer(m));\
-            map.addLayer(markerClusterGroup);\
-\
-            document.getElementById('countInfo').textContent = `\uc0\u1055 \u1086 \u1082 \u1072 \u1079 \u1072 \u1085 \u1086 : $\{data.length\}`;\
-        \}\
-\
-        renderMarkers(walks);\
-\
-        map.on('click', function() \{\
-            hideAllLines();\
-            map.closePopup();\
-            activePopup = null;\
-        \});\
-\
-        document.getElementById('streetFilter').addEventListener('input', function(e) \{\
-            const term = e.target.value.toLowerCase();\
-            const filtered = walks.filter(w => w.street.toLowerCase().includes(term));\
-            renderMarkers(filtered);\
-        \});\
-    </script>\
-</body>\
-</html>}
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.5">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; -webkit-text-stroke: #000000}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; -webkit-text-stroke: #000000; min-height: 14.0px}
+    span.s1 {font-kerning: none}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;head&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;title&gt;Карта прогулок СПб&lt;/title&gt;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;!-- Leaflet CSS --&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" /&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" /&gt;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;style&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>body { margin: 0; font-family: Arial, sans-serif; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>#map { height: 100vh; width: 100%; }</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.info-window {<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>max-width: 320px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>padding: 10px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>text-align: center;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>background: white;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>border-radius: 8px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>box-shadow: 0 2px 10px rgba(0,0,0,0.1);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.video-thumb {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>width: 100%;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>height: auto;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>display: block;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>border-radius: 4px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>margin-bottom: 8px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>background-color: #f0f0f0;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.video-fallback {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>width: 100%;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>height: 160px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>border-radius: 8px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>margin-bottom: 10px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>display: flex;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>align-items: center;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>justify-content: center;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>font-family: Arial, sans-serif;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>color: white;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>box-shadow: 0 2px 5px rgba(0,0,0,0.1);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.info-window h3 {<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>margin: 0 0 8px 0;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>font-size: 16px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>line-height: 1.2;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.info-window .date {<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>color: #666;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>font-size: 13px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>margin-bottom: 12px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.btn-group {<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>display: flex;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>gap: 5px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>justify-content: center;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>flex-wrap: wrap;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.btn {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>flex: 1;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>padding: 8px 5px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>text-decoration: none;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>border-radius: 4px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>font-weight: bold;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>font-size: 12px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>min-width: 80px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>border: 1px solid #ddd;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>transition: all 0.2s ease;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.btn:hover {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>transform: translateY(-1px);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>box-shadow: 0 2px 5px rgba(0,0,0,0.1);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>/* VK главная кнопка */</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.btn-vk {<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>background: #0077FF;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>color: white;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>border-color: #0077FF;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.btn-youtube { color: #ff0000; border-color: #ff0000; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.btn-rutube { color: #007bff; border-color: #007bff; }</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">        </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>#filters {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>position: absolute;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>top: 10px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>left: 10px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>z-index: 1000;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>background: white;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>padding: 15px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>border-radius: 8px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>box-shadow: 0 2px 8px rgba(0,0,0,0.2);<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>max-width: 300px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>#filters input {<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>width: 100%;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>margin: 5px 0;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>padding: 8px;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>box-sizing: border-box;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;body&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div id="filters"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;h3 style="margin-top: 0;"&gt;🔍 Фильтры&lt;/h3&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;input type="text" id="streetFilter" placeholder="Улица (например: Садовая)"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div id="countInfo"&gt;Загружено: 0 прогулок&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">    </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div id="map"&gt;&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"&gt;&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"&gt;&lt;/script&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const map = L.map('map').setView([59.933, 30.316], 14);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>attribution: '© OpenStreetMap contributors'</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}).addTo(map);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const walks = [</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Прогулка 1</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>{</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>id: 1,</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>title: "Жаркий летний день на Садовой и у Исаакия ☀️ 4K",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>youtube_id: "RrEMovv0YcY",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>rutube_id: "97506cb308931ebe92fbc5e22b5dde5b",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>vk_id: "-235889322_456239017",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>date: "05.06.2026",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>street: "Садовая / Гороховая",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>city: "Санкт-Петербург",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>popup_direction: "right", // ← Попап открывается СПРАВА</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>route: [</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.9284701, 30.3219784],</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.92770086639246, 30.319864379726575],</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.92971883966826, 30.31691065474633],</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.92861162407293, 30.31567322206648],</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.929763127523444, 30.314385281930303],</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.92923799629868, 30.31231447622048],</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.9328812892643, 30.30833479226941]</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>]</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>},</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Прогулка 2</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>{</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>id: 2,</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>title: "Прогулка от Дворцовой по Гороховой до Садовой",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>youtube_id: "JDKV4ZVDOFg",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>rutube_id: "89509f24cb70c72fe87aa5e7733fed25",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>vk_id: "",<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>date: "05.05.2026",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>street: "Гороховая / Дворцовая пл.",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>city: "Санкт-Петербург",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>popup_direction: "left", // ← Попап открывается СЛЕВА</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>route: [</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.93902365644025, 30.31100749396413],</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.937412404964086, 30.312117279663422],</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.936460693340194, 30.310255096879867],</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>[59.928641827688374, 30.321876191845234]</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>]</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>];</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let allMarkers = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let allPolylines = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let markerClusterGroup;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let activePopup = null;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function createPopupContent(walk) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const date = walk.date;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>let buttonsHtml = `&lt;div class="btn-group"&gt;`;</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (walk.vk_id &amp;&amp; walk.vk_id !== "") {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>buttonsHtml += `&lt;a href="https://vkvideo.ru/video${walk.vk_id}" target="_blank" class="btn btn-vk"&gt;▶ VK Видео&lt;/a&gt;`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (walk.youtube_id &amp;&amp; walk.youtube_id !== "") {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>buttonsHtml += `&lt;a href="https://www.youtube.com/watch?v=${walk.youtube_id}" target="_blank" class="btn btn-youtube"&gt;▶ YouTube&lt;/a&gt;`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (walk.rutube_id &amp;&amp; walk.rutube_id !== "") {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>buttonsHtml += `&lt;a href="https://rutube.ru/video/${walk.rutube_id}/" target="_blank" class="btn btn-rutube"&gt;▶ RuTube&lt;/a&gt;`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>buttonsHtml += `&lt;/div&gt;`;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>let imageHtml = '';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (walk.youtube_id &amp;&amp; walk.youtube_id !== "") {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>imageHtml = `&lt;img src="https://img.youtube.com/vi/${walk.youtube_id}/hqdefault.jpg"<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                  </span>class="video-thumb"<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                  </span>alt="${walk.title}"</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                  </span>onerror="this.style.display='none'; document.getElementById('fallback-img-${walk.id}').style.display='flex';"&gt;`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const fallbackColor = (walk.vk_id &amp;&amp; walk.vk_id !== "") ? '#0077FF' : (walk.youtube_id ? '#ff0000' : '#888');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const platformName = (walk.vk_id &amp;&amp; walk.vk_id !== "") ? 'VK Видео' : (walk.youtube_id ? 'YouTube' : 'Видео');</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>imageHtml += `</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div id="fallback-img-${walk.id}" class="video-fallback" style="${walk.youtube_id ? 'display:none;' : 'display:flex;'} background-color: ${fallbackColor};"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div style="text-align:center;"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div style="font-size: 40px; margin-bottom: 5px;"&gt;▶&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div style="font-weight: bold; font-size: 16px;"&gt;${platformName}&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>`;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>return `</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="info-window"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>${imageHtml}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;h3&gt;${walk.title}&lt;/h3&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="date"&gt;📅 ${date}&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>${buttonsHtml}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function hideAllLines() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>allPolylines.forEach(p =&gt; p.setStyle({ opacity: 0 }));</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function renderMarkers(data) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (markerClusterGroup) map.removeLayer(markerClusterGroup);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>allPolylines.forEach(poly =&gt; map.removeLayer(poly));</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>allMarkers = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>allPolylines = [];</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>data.forEach(walk =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const polyline = L.polyline(walk.route, {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>color: '#FF5252',</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>weight: 4,<span class="Apple-converted-space">             </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>opacity: 0, <span class="Apple-converted-space">           </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>dashArray: '10, 10',<span class="Apple-converted-space">   </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>lineCap: 'round'</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}).addTo(map);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>allPolylines.push(polyline);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const marker = L.marker(walk.route[0]);</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// Создаём попап с направлением из данных</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const popup = L.popup({<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>autoClose: false,<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>closeOnClick: false,</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>direction: walk.popup_direction || 'auto' // ← Используем направление из данных</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}).setContent(createPopupContent(walk));</span></p>
+<p class="p2"><span class="s1"><span class="Apple-converted-space">                </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>marker.bindPopup(popup);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>marker.on('mouseover', function() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>hideAllLines();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>polyline.setStyle({ opacity: 1.0 });</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>polyline.bringToFront();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>this.openPopup();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>activePopup = popup;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>});</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>marker.on('mouseout', function() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>setTimeout(() =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>const isMouseOverPopup = document.querySelector('.leaflet-popup-pane:hover');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>if (!isMouseOverPopup) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>hideAllLines();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>this.closePopup();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>activePopup = null;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>}, 100);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>});</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>marker.on('popupopen', function() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const popupPane = document.querySelector('.leaflet-popup-content-wrapper');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>if (popupPane) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>popupPane.addEventListener('mouseleave', function() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>hideAllLines();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>marker.closePopup();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>activePopup = null;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>});</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>});</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>allMarkers.push(marker);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>markerClusterGroup = L.markerClusterGroup();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>allMarkers.forEach(m =&gt; markerClusterGroup.addLayer(m));</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>map.addLayer(markerClusterGroup);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById('countInfo').textContent = `Показано: ${data.length}`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>renderMarkers(walks);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>map.on('click', function() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>hideAllLines();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>map.closePopup();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>activePopup = null;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>document.getElementById('streetFilter').addEventListener('input', function(e) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const term = e.target.value.toLowerCase();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const filtered = walks.filter(w =&gt; w.street.toLowerCase().includes(term));</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>renderMarkers(filtered);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+</body>
+</html>
