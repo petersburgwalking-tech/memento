@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Карта прогулок СПб</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        
+        .info-window { 
+            max-width: 320px; 
+            padding: 10px; 
+            text-align: center; 
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .video-thumb {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            background-color: #f0f0f0;
+        }
+        
+        .video-fallback {
+            width: 100%;
+            height: 160px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .info-window h3 { 
+            margin: 0 0 8px 0; 
+            font-size: 16px; 
+            line-height: 1.2; 
+        }
+        .info-window .date { 
+            color: #666; 
+            font-size: 13px; 
+            margin-bottom: 12px; 
+        }
+        
+        .btn-group { 
+            display: flex; 
+            gap: 5px; 
+            justify-content: center; 
+            flex-wrap: wrap; 
+        }
+        .btn {
+            flex: 1; 
+            padding: 8px 5px; 
+            text-decoration: none; 
+            border-radius: 4px;
+            font-weight: bold; 
+            font-size: 12px; 
+            min-width: 80px; 
+            border: 1px solid #ddd;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        /* VK главная кнопка */
+        .btn-vk { 
+            background: #0077FF; 
+            color: white; 
+            border-color: #0077FF; 
+        }
+        .btn-youtube { color: #ff0000; border-color: #ff0000; }
+        .btn-rutube { color: #007bff; border-color: #007bff; }
+        
+        #filters {
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            z-index: 1000;
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+            max-width: 300px;
+        }
+        #filters input { 
+            width: 100%; 
+            margin: 5px 0; 
+            padding: 8px; 
+            box-sizing: border-box; 
+        }
+    </style>
+</head>
+<body>
+    <div id="filters">
+        <h3 style="margin-top: 0;">🔍 Фильтры</h3>
+        <input type="text" id="streetFilter" placeholder="Улица (например: Садовая)">
+        <div id="countInfo">Загружено: 0 прогулок</div>
+    </div>
+    
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+    <script>
+        const map = L.map('map').setView([59.933, 30.316], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const walks = [
+            // Прогулка 1
+            {
+                id: 1,
+                title: "Жаркий летний день на Садовой и у Исаакия ☀️ 4K",
+                youtube_id: "RrEMovv0YcY",
+                rutube_id: "97506cb308931ebe92fbc5e22b5dde5b",
+                vk_id: "-235889322_456239017",
+                date: "05.06.2026",
+                street: "Садовая / Гороховая",
+                city: "Санкт-Петербург",
+                popup_direction: "right", // ← Попап открывается СПРАВА
+                
+                route: [
+                    [59.9284701, 30.3219784],
+                    [59.92770086639246, 30.319864379726575],
+                    [59.92971883966826, 30.31691065474633],
+                    [59.92861162407293, 30.31567322206648],
+                    [59.929763127523444, 30.314385281930303],
+                    [59.92923799629868, 30.31231447622048],
+                    [59.9328812892643, 30.30833479226941]
+                ]
+            },
+            // Прогулка 2
+            {
+                id: 2,
+                title: "Прогулка от Дворцовой по Гороховой до Садовой",
+                youtube_id: "JDKV4ZVDOFg",
+                rutube_id: "89509f24cb70c72fe87aa5e7733fed25",
+                vk_id: "", 
+                date: "05.05.2026",
+                street: "Гороховая / Дворцовая пл.",
+                city: "Санкт-Петербург",
+                popup_direction: "left", // ← Попап открывается СЛЕВА
+                
+                route: [
+                    [59.93902365644025, 30.31100749396413],
+                    [59.937412404964086, 30.312117279663422],
+                    [59.936460693340194, 30.310255096879867],
+                    [59.928641827688374, 30.321876191845234]
+                ]
+            }
+        ];
+
+        let allMarkers = [];
+        let allPolylines = [];
+        let markerClusterGroup;
+        let activePopup = null;
+
+        function createPopupContent(walk) {
+            const date = walk.date;
+            
+            let buttonsHtml = `<div class="btn-group">`;
+            
+            if (walk.vk_id && walk.vk_id !== "") {
+                buttonsHtml += `<a href="https://vkvideo.ru/video${walk.vk_id}" target="_blank" class="btn btn-vk">▶ VK Видео</a>`;
+            }
+            if (walk.youtube_id && walk.youtube_id !== "") {
+                buttonsHtml += `<a href="https://www.youtube.com/watch?v=${walk.youtube_id}" target="_blank" class="btn btn-youtube">▶ YouTube</a>`;
+            }
+            if (walk.rutube_id && walk.rutube_id !== "") {
+                buttonsHtml += `<a href="https://rutube.ru/video/${walk.rutube_id}/" target="_blank" class="btn btn-rutube">▶ RuTube</a>`;
+            }
+            buttonsHtml += `</div>`;
+
+            let imageHtml = '';
+            if (walk.youtube_id && walk.youtube_id !== "") {
+                imageHtml = `<img src="https://img.youtube.com/vi/${walk.youtube_id}/hqdefault.jpg" 
+                                  class="video-thumb" 
+                                  alt="${walk.title}"
+                                  onerror="this.style.display='none'; document.getElementById('fallback-img-${walk.id}').style.display='flex';">`;
+            }
+            
+            const fallbackColor = (walk.vk_id && walk.vk_id !== "") ? '#0077FF' : (walk.youtube_id ? '#ff0000' : '#888');
+            const platformName = (walk.vk_id && walk.vk_id !== "") ? 'VK Видео' : (walk.youtube_id ? 'YouTube' : 'Видео');
+            
+            imageHtml += `
+                <div id="fallback-img-${walk.id}" class="video-fallback" style="${walk.youtube_id ? 'display:none;' : 'display:flex;'} background-color: ${fallbackColor};">
+                    <div style="text-align:center;">
+                        <div style="font-size: 40px; margin-bottom: 5px;">▶</div>
+                        <div style="font-weight: bold; font-size: 16px;">${platformName}</div>
+                    </div>
+                </div>
+            `;
+
+            return `
+                <div class="info-window">
+                    ${imageHtml}
+                    <h3>${walk.title}</h3>
+                    <div class="date">📅 ${date}</div>
+                    ${buttonsHtml}
+                </div>
+            `;
+        }
+
+        function hideAllLines() {
+            allPolylines.forEach(p => p.setStyle({ opacity: 0 }));
+        }
+
+        function renderMarkers(data) {
+            if (markerClusterGroup) map.removeLayer(markerClusterGroup);
+            allPolylines.forEach(poly => map.removeLayer(poly));
+            
+            allMarkers = [];
+            allPolylines = [];
+
+            data.forEach(walk => {
+                const polyline = L.polyline(walk.route, {
+                    color: '#FF5252',
+                    weight: 4,             
+                    opacity: 0,            
+                    dashArray: '10, 10',   
+                    lineCap: 'round'
+                }).addTo(map);
+
+                allPolylines.push(polyline);
+
+                const marker = L.marker(walk.route[0]);
+                
+                // Создаём попап с направлением из данных
+                const popup = L.popup({ 
+                    autoClose: false, 
+                    closeOnClick: false,
+                    direction: walk.popup_direction || 'auto' // ← Используем направление из данных
+                }).setContent(createPopupContent(walk));
+                
+                marker.bindPopup(popup);
+
+                marker.on('mouseover', function() {
+                    hideAllLines();
+                    polyline.setStyle({ opacity: 1.0 });
+                    polyline.bringToFront();
+                    this.openPopup();
+                    activePopup = popup;
+                });
+
+                marker.on('mouseout', function() {
+                    setTimeout(() => {
+                        const isMouseOverPopup = document.querySelector('.leaflet-popup-pane:hover');
+                        if (!isMouseOverPopup) {
+                            hideAllLines();
+                            this.closePopup();
+                            activePopup = null;
+                        }
+                    }, 100);
+                });
+
+                marker.on('popupopen', function() {
+                    const popupPane = document.querySelector('.leaflet-popup-content-wrapper');
+                    if (popupPane) {
+                        popupPane.addEventListener('mouseleave', function() {
+                            hideAllLines();
+                            marker.closePopup();
+                            activePopup = null;
+                        });
+                    }
+                });
+
+                allMarkers.push(marker);
+            });
+
+            markerClusterGroup = L.markerClusterGroup();
+            allMarkers.forEach(m => markerClusterGroup.addLayer(m));
+            map.addLayer(markerClusterGroup);
+
+            document.getElementById('countInfo').textContent = `Показано: ${data.length}`;
+        }
+
+        renderMarkers(walks);
+
+        map.on('click', function() {
+            hideAllLines();
+            map.closePopup();
+            activePopup = null;
+        });
+
+        document.getElementById('streetFilter').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const filtered = walks.filter(w => w.street.toLowerCase().includes(term));
+            renderMarkers(filtered);
+        });
+    </script>
+</body>
+</html>
